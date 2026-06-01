@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelForge Studio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="toolbar">
+        <div class="logo">🎮 PixelForge</div>
+        <div class="project-controls">
+            <button id="btn-run" class="btn success">▶ Run Game</button>
+            <button id="btn-save" class="btn">💾 Save Project</button>
+        </div>
+        <div class="view-switcher">
+            <button class="tab-btn active" data-target="code-workspace">💻 Code Editor</button>
+            <button class="tab-btn" data-target="sprite-workspace">🎨 Sprite Editor</button>
+            <button class="tab-btn" data-target="music-workspace">🎵 Music Maker</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>📜 Scripts</h3>
+                <ul class="asset-list" id="scripts-list">
+                    <li class="active">main.pf</li>
+                    <li>player.pf</li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h3>👾 Sprites</h3>
+                <ul class="asset-list" id="sprites-list">
+                    <li>hero_idle</li>
+                    <li>enemy_blob</li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h3>🔊 Audio</h3>
+                <ul class="asset-list" id="audio-list">
+                    <li>bgm_theme</li>
+                    <li>fx_jump</li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="workspace">
+            
+            <section id="code-workspace" class="workspace-view active">
+                <div class="editor-header">Editing: <span id="current-file">main.pf</span></div>
+                <textarea id="code-textarea" spellcheck="false">// Write your custom language code here...
+fn init() {
+    let player = spawn_sprite(hero_idle, 80, 60);
+}
+
+fn update() {
+    if button_pressed(BTN_RIGHT) {
+        move_sprite(player, 1, 0);
+    }
+}</textarea>
+            </section>
+
+            <section id="sprite-workspace" class="workspace-view">
+                <div class="editor-header">Sprite Editor</div>
+                <div class="sprite-container">
+                    <div class="canvas-toolbar">
+                        <button class="tool-btn active">✏️ Pencil</button>
+                        <button class="tool-btn">🪣 Bucket</button>
+                        <input type="color" id="sprite-color" value="#ff004d">
+                    </div>
+                    <div class="pixel-grid-placeholder">
+                        <p>[ Pixel Canvas Element Goes Here ]</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="music-workspace" class="workspace-view">
+                <div class="editor-header">Audio Sequencer</div>
+                <div class="music-container">
+                    <div class="tracker-controls">
+                        <button class="btn">▶ Play Tracker</button>
+                        <input type="range" min="60" max="240" value="120"> <span>BPM</span>
+                    </div>
+                    <div class="tracker-grid-placeholder">
+                        <p>[ Audio Grid / Piano Roll Goes Here ]</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="console-footer">
+        <div class="console-header">Console Output</div>
+        <div class="console-log" id="console-output">
+            <span class="log-system">[System]: PixelForge IDE initialized successfully.</span>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
