@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PixelForge Studio</title>
-    <link rel="stylesheet" href="style.css">
+    <title>PixelForge Studio Pro</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
     <header class="toolbar">
-        <div class="logo">🎮 PixelForge</div>
+        <div class="logo">🎮 PixelForge Studio</div>
         <div class="project-controls">
             <button id="btn-run" class="btn success">▶ Run Game</button>
-            <button id="btn-save" class="btn">💾 Save Project</button>
+            <button id="btn-stop" class="btn danger">🛑 Stop</button>
         </div>
         <div class="view-switcher">
-            <button class="tab-btn active" data-target="code-workspace">💻 Code Editor</button>
+            <button class="tab-btn active" data-target="code-workspace">💻 Code & Viewport</button>
             <button class="tab-btn" data-target="sprite-workspace">🎨 Sprite Editor</button>
             <button class="tab-btn" data-target="music-workspace">🎵 Music Maker</button>
         </div>
@@ -25,23 +25,8 @@
         <aside class="sidebar">
             <div class="sidebar-section">
                 <h3>📜 Scripts</h3>
-                <ul class="asset-list" id="scripts-list">
+                <ul class="asset-list">
                     <li class="active">main.pf</li>
-                    <li>player.pf</li>
-                </ul>
-            </div>
-            <div class="sidebar-section">
-                <h3>👾 Sprites</h3>
-                <ul class="asset-list" id="sprites-list">
-                    <li>hero_idle</li>
-                    <li>enemy_blob</li>
-                </ul>
-            </div>
-            <div class="sidebar-section">
-                <h3>🔊 Audio</h3>
-                <ul class="asset-list" id="audio-list">
-                    <li>bgm_theme</li>
-                    <li>fx_jump</li>
                 </ul>
             </div>
         </aside>
@@ -49,44 +34,49 @@
         <main class="workspace">
             
             <section id="code-workspace" class="workspace-view active">
-                <div class="editor-header">Editing: <span id="current-file">main.pf</span></div>
-                <textarea id="code-textarea" spellcheck="false">// Write your custom language code here...
+                <div class="split-panel">
+                    <div class="editor-pane">
+                        <div class="editor-header">Editing: <span>main.pf</span></div>
+                        <textarea id="code-textarea" spellcheck="false">// ForgeScript Test Code
+let playerX = 10
+let playerY = 80
+
 fn init() {
-    let player = spawn_sprite(hero_idle, 80, 60);
+    print("Welcome to PixelForge Engine!")
 }
 
 fn update() {
-    if button_pressed(BTN_RIGHT) {
-        move_sprite(player, 1, 0);
+    clear("#111418")
+    
+    // Draw background grid marker
+    rect(40, 40, 160, 100, "#1a1d24")
+    
+    // Draw player and move them dynamically across frames
+    rect(playerX, playerY, 16, 16, "#ff004d")
+    
+    playerX = playerX + 1
+    if playerX > 256 {
+        playerX = 0
     }
 }</textarea>
+                    </div>
+
+                    <div class="viewport-pane">
+                        <div class="editor-header">Game Viewport (256x256)</div>
+                        <div class="canvas-container">
+                            <canvas id="game-viewport" width="256" height="256"></canvas>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section id="sprite-workspace" class="workspace-view">
-                <div class="editor-header">Sprite Editor</div>
-                <div class="sprite-container">
-                    <div class="canvas-toolbar">
-                        <button class="tool-btn active">✏️ Pencil</button>
-                        <button class="tool-btn">🪣 Bucket</button>
-                        <input type="color" id="sprite-color" value="#ff004d">
-                    </div>
-                    <div class="pixel-grid-placeholder">
-                        <p>[ Pixel Canvas Element Goes Here ]</p>
-                    </div>
-                </div>
+                <div class="editor-header">Sprite Editor Panel</div>
+                <div class="placeholder-box">[ Sprite Editor coming soon ]</div>
             </section>
-
             <section id="music-workspace" class="workspace-view">
-                <div class="editor-header">Audio Sequencer</div>
-                <div class="music-container">
-                    <div class="tracker-controls">
-                        <button class="btn">▶ Play Tracker</button>
-                        <input type="range" min="60" max="240" value="120"> <span>BPM</span>
-                    </div>
-                    <div class="tracker-grid-placeholder">
-                        <p>[ Audio Grid / Piano Roll Goes Here ]</p>
-                    </div>
-                </div>
+                <div class="editor-header">Music Tracker Panel</div>
+                <div class="placeholder-box">[ Music Sequencer coming soon ]</div>
             </section>
 
         </main>
@@ -94,11 +84,9 @@ fn update() {
 
     <footer class="console-footer">
         <div class="console-header">Console Output</div>
-        <div class="console-log" id="console-output">
-            <span class="log-system">[System]: PixelForge IDE initialized successfully.</span>
-        </div>
+        <div class="console-log" id="console-output"></div>
     </footer>
 
-    <script src="app.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
