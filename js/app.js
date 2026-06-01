@@ -1,49 +1,71 @@
+import { ForgeCompiler } from './compiler.js';
+import { GameRuntime } from './runtime.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Elements
+    // Node references mapping
     const tabButtons = document.querySelectorAll('.tab-btn');
     const workspaces = document.querySelectorAll('.workspace-view');
+    const codeArea = document.getElementById('code-textarea');
+    const consoleLog = document.getElementById('console-output');
+    
     const btnRun = document.getElementById('btn-run');
-    const consoleOutput = document.getElementById('console-output');
+    const btnStop = document.getElementById('btn-stop');
 
-    // 1. View Switching Handler
+    // 1. Initialize Modules Instantiation System
+    const runtime = new GameRuntime('game-viewport');
+    const compiler = new ForgeCompiler(
+        (msg, type) => logToIDEConsole(msg, type),
+        (cmd, args) => runtime.executeRenderOperation(cmd, args)
+    );
+
+    // 2. View Panel Workspace Switcher Routing Handling logic
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // Remove active states from tabs
             tabButtons.forEach(btn => btn.classList.remove('active'));
-            // Hide all workspaces
             workspaces.forEach(view => view.classList.remove('active'));
 
-            // Add active state to clicked tab
             button.classList.add('active');
-            // Show corresponding target workspace
-            const targetId = button.getAttribute('data-target');
-            document.getElementById(targetId).classList.add('active');
-            
-            logToConsole(`Switched to ${button.textContent.trim()}`);
+            document.getElementById(button.getAttribute('data-target')).classList.add('active');
         });
     });
 
-    // 2. Play Button Simulation
+    // 3. Project Actions Runtime Processing Mapping Hooks
     btnRun.addEventListener('click', () => {
-        logToConsole("Compiling custom language code...");
+        logToIDEConsole("Initializing runtime engine pipeline compilation execution...", "system");
         
-        // Simulating compilation delay
-        setTimeout(() => {
-            logToConsole("Success! Launching Game Runtime Window...", "system");
-            alert("Game engine runtime hook would launch here!");
-        }, 600);
+        try {
+            // Read current script source code state representation string
+            const source = codeArea.value;
+            compiler.compile(source);
+
+            // Bind compilation result outputs to active game engine frame update runtime arrays 
+            runtime.start(
+                () => compiler.executeFunction('init'),
+                () => compiler.executeFunction('update')
+            );
+        } catch(ex) {
+            logToIDEConsole(`Build Failed compilation check: ${ex.message}`, "error");
+        }
     });
 
-    // Helper function to append to console
-    function logToConsole(message, type = 'info') {
+    btnStop.addEventListener('click', () => {
+        runtime.stop();
+        logToIDEConsole("Engine execution execution loops halted cleanly.", "system");
+    });
+
+    // Console rendering context feedback system 
+    function logToIDEConsole(message, type = 'info') {
         const line = document.createElement('div');
-        line.className = `log-${type}`;
+        line.className = `log-line ${type}`;
         
         const timestamp = new Date().toLocaleTimeString();
-        line.innerHTML = `<span>[${timestamp}]</span> ${message}`;
+        line.innerHTML = `<span class="time">[${timestamp}]</span><span>${message}</span>`;
         
-        consoleOutput.appendChild(line);
-        consoleOutput.scrollTop = consoleOutput.scrollHeight; // Auto scroll to bottom
+        consoleLog.appendChild(line);
+        consoleLog.scrollTop = consoleLog.scrollHeight; 
     }
+
+    // Fire default diagnostic setup log messages line entry references
+    logToIDEConsole("PixelForge Studio IDE interface systems active.", "system");
 });
