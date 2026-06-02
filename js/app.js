@@ -1,71 +1,55 @@
-import { ForgeCompiler } from './compiler.js';
+import { Lexer } from './engine/lexer.js';
+import { Parser } from './engine/parser.js';
+import { Interpreter } from './engine/interpreter.js';
 import { GameRuntime } from './runtime.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // Node references mapping
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const workspaces = document.querySelectorAll('.workspace-view');
     const codeArea = document.getElementById('code-textarea');
     const consoleLog = document.getElementById('console-output');
-    
     const btnRun = document.getElementById('btn-run');
     const btnStop = document.getElementById('btn-stop');
 
-    // 1. Initialize Modules Instantiation System
     const runtime = new GameRuntime('game-viewport');
-    const compiler = new ForgeCompiler(
+    const interpreter = new Interpreter(
         (msg, type) => logToIDEConsole(msg, type),
         (cmd, args) => runtime.executeRenderOperation(cmd, args)
     );
 
-    // 2. View Panel Workspace Switcher Routing Handling logic
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            workspaces.forEach(view => view.classList.remove('active'));
-
-            button.classList.add('active');
-            document.getElementById(button.getAttribute('data-target')).classList.add('active');
-        });
-    });
-
-    // 3. Project Actions Runtime Processing Mapping Hooks
     btnRun.addEventListener('click', () => {
-        logToIDEConsole("Initializing runtime engine pipeline compilation execution...", "system");
-        
+        logToIDEConsole("Lexical parsing initialization...", "system");
         try {
-            // Read current script source code state representation string
-            const source = codeArea.value;
-            compiler.compile(source);
+            // 1. Run Lexical Analysis
+            const lexer = new Lexer(codeArea.value);
+            const tokens = lexer.tokenize();
 
-            // Bind compilation result outputs to active game engine frame update runtime arrays 
+            // 2. Syntactic Analysis (Generate AST)
+            const parser = new Parser(tokens);
+            const ast = parser.parseProject();
+
+            // 3. Mount Abstract Syntax Tree onto interpreter runtime structures
+            interpreter.loadAST(ast);
+            logToIDEConsole("AST Generated Successfully. Initializing Runtime Engine...", "system");
+
+            // 4. Fire Loop Pipelines
             runtime.start(
-                () => compiler.executeFunction('init'),
-                () => compiler.executeFunction('update')
+                () => interpreter.executeFunction('init'),
+                () => interpreter.executeFunction('update')
             );
-        } catch(ex) {
-            logToIDEConsole(`Build Failed compilation check: ${ex.message}`, "error");
+        } catch (ex) {
+            logToIDEConsole(`Build Execution Failure: ${ex.message}`, "error");
         }
     });
 
     btnStop.addEventListener('click', () => {
         runtime.stop();
-        logToIDEConsole("Engine execution execution loops halted cleanly.", "system");
+        logToIDEConsole("Engine execution loop cleanly halted.", "system");
     });
 
-    // Console rendering context feedback system 
     function logToIDEConsole(message, type = 'info') {
         const line = document.createElement('div');
         line.className = `log-line ${type}`;
-        
-        const timestamp = new Date().toLocaleTimeString();
-        line.innerHTML = `<span class="time">[${timestamp}]</span><span>${message}</span>`;
-        
+        line.innerHTML = `<span class="time">[${new Date().toLocaleTimeString()}]</span> <span>${message}</span>`;
         consoleLog.appendChild(line);
-        consoleLog.scrollTop = consoleLog.scrollHeight; 
+        consoleLog.scrollTop = consoleLog.scrollHeight;
     }
-
-    // Fire default diagnostic setup log messages line entry references
-    logToIDEConsole("PixelForge Studio IDE interface systems active.", "system");
 });
