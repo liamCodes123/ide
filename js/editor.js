@@ -11,7 +11,7 @@ export class PixelForgeEditor {
     initListeners() {
         this.tx.addEventListener('input', () => this.update());
         
-        // Lock scroll alignments together instantly
+        // Synchronize scroll coordinates across layers perfectly
         this.tx.addEventListener('scroll', () => {
             this.hl.scrollTop = this.tx.scrollTop;
             this.hl.scrollLeft = this.tx.scrollLeft;
@@ -24,15 +24,15 @@ export class PixelForgeEditor {
     update() {
         const code = this.tx.value;
         
-        // 1. Render Line Counter Arrays
-        const lineCount = code.split('\n').length;
+        // Compute and sync lines
+        const lines = code.split('\n');
         let lineStr = '';
-        for (let i = 1; i <= lineCount; i++) {
+        for (let i = 1; i <= lines.length; i++) {
             lineStr += i + '<br>';
         }
         this.ln.innerHTML = lineStr;
 
-        // 2. Syntax Rendering Transformation 
+        // Perform single-pass highlighting compilation
         this.hl.innerHTML = this.highlightSyntax(code);
     }
 
@@ -41,7 +41,7 @@ export class PixelForgeEditor {
         const end = this.tx.selectionEnd;
         const val = this.tx.value;
 
-        // Tab Key Override Action
+        // Handle Tab Interceptions
         if (e.key === 'Tab') {
             e.preventDefault();
             this.tx.value = val.substring(0, start) + "    " + val.substring(end);
@@ -49,7 +49,7 @@ export class PixelForgeEditor {
             this.update();
         }
 
-        // Auto-Close Boundary Bracket Pairs Map Execution
+        // Auto-Close Pair Character Interceptions
         const pairs = { '{': '}', '(': ')', '[': ']', '"': '"', "'": "'" };
         if (pairs[e.key] !== undefined) {
             e.preventDefault();
@@ -61,20 +61,25 @@ export class PixelForgeEditor {
     }
 
     highlightSyntax(code) {
-        // Escape special HTML character symbols safely
-        let html = code
+        // Step 1: Sanitize HTML tags to prevent cross-injection breaks
+        let escaped = code
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
 
-        // Regular expression maps for token processing rules
-        html = html.replace(/(\/\/.+)/g, '<span class="tk-comment">$1</span>');
-        html = html.replace(/(["'])(.*?)\1/g, '<span class="tk-string">$1$2$1</span>');
-        html = html.replace(/\b(let|class|fn|if|new|return)\b/g, '<span class="tk-keyword">$1</span>');
-        html = html.replace(/\b(this)\b/g, '<span class="tk-this">$1</span>');
-        html = html.replace(/\b(\d+)\b/g, '<span class="tk-number">$1</span>');
-        html = html.replace(/\b(print|clear|rect|line|collides)\b(?=\s*\()/g, '<span class="tk-builtin">$1</span>');
+        // Step 2: Single-pass master tokenizer regex
+        // Group 1: Comments, Group 2: Strings, Group 3: Keywords, Group 4: This, Group 5: Core Built-ins, Group 6: Numbers, Group 7: Member Properties
+        const masterRegex = /(\/\/[^\n]*)|(["'](?:\\.|[^"\\])*["'])|\b(let|class|fn|if|new|return)\b|\b(this)\b|\b(print|clear|rect|line|collides)\b(?=\s*\()|\b(\d+)\b|(?<=\.)([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
 
-        return html;
+        return escaped.replace(masterRegex, (match, g1, g2, g3, g4, g5, g6, g7) => {
+            if (g1) return `<span class="tk-comment">${match}</span>`;
+            if (g2) return `<span class="tk-string">${match}</span>`;
+            if (g3) return `<span class="tk-keyword">${match}</span>`;
+            if (g4) return `<span class="tk-this">${match}</span>`;
+            if (g5) return `<span class="tk-builtin">${match}</span>`;
+            if (g6) return `<span class="tk-number">${match}</span>`;
+            if (g7) return `<span class="tk-member">${match}</span>`;
+            return match;
+        });
     }
 }
