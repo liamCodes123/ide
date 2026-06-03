@@ -9,40 +9,38 @@
     --accent-success: #2f9e44;
     --accent-danger: #e03131;
     
-    /* Token Highlighting Hex Colors */
+    /* VS Code Dracula-Style Palette */
     --token-keyword: #ff79c6;
     --token-builtin: #50fa7b;
     --token-string: #f1fa8c;
     --token-number: #bd93f9;
     --token-comment: #6272a4;
     --token-this: #8be9fd;
+    --token-member: #66d9ef;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Fira Code', Consolas, Monaco, monospace; }
 body { background-color: var(--bg-darker); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-/* Structural Toolbar and Navigation Buttons */
+/* Main layout frames */
 .toolbar { height: 50px; background-color: var(--bg-dark); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10; }
 .logo { font-weight: bold; font-size: 1rem; color: var(--text-main); }
 .project-controls { display: flex; gap: 8px; }
 .btn { background-color: var(--bg-medium); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
-.btn:hover { background-color: var(--border-color); }
 .btn.success { background-color: var(--accent-success); border-color: #2b8a3e; }
 .btn.danger { background-color: var(--accent-danger); border-color: #c92a2a; }
-
 .view-switcher { display: flex; height: 100%; }
 .view-switcher .tab-btn { background: none; border: none; color: var(--text-muted); padding: 0 15px; cursor: pointer; font-size: 0.85rem; border-bottom: 2px solid transparent; height: 50px; }
 .view-switcher .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); background-color: rgba(92, 124, 250, 0.05); }
 
-/* Master Layout Grid Structure */
 .main-container { flex: 1; display: flex; overflow: hidden; }
 .sidebar { width: 180px; background-color: var(--bg-dark); border-right: 1px solid var(--border-color); padding: 15px 0; }
-.sidebar-section h3 { font-size: 0.7rem; color: var(--text-muted); padding: 0 15px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-section h3 { font-size: 0.7rem; color: var(--text-muted); padding: 0 15px; margin-bottom: 8px; text-transform: uppercase; }
 .asset-list { list-style: none; }
-.asset-list li { padding: 8px 20px; font-size: 0.85rem; cursor: pointer; }
+.asset-list li { padding: 8px 20px; font-size: 0.85rem; }
 .asset-list li.active { background-color: rgba(92, 124, 250, 0.12); color: var(--accent); border-left: 3px solid var(--accent); font-weight: bold; }
 
-.workspace { flex: 1; display: flex; flex-direction: column; background: var(--bg-darker); position: relative; }
+.workspace { flex: 1; display: flex; flex-direction: column; background: var(--bg-darker); }
 .workspace-view { display: none; height: 100%; width: 100%; }
 .workspace-view.active { display: flex; }
 .split-panel { display: flex; width: 100%; height: 100%; }
@@ -50,35 +48,90 @@ body { background-color: var(--bg-darker); color: var(--text-main); height: 100v
 .viewport-pane { width: 340px; display: flex; flex-direction: column; background-color: #0c0e12; align-items: center; }
 .editor-header { width: 100%; background-color: var(--bg-dark); padding: 10px 15px; font-size: 0.8rem; border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-weight: bold; }
 
-/* Custom Layered Code Editor Styling Matrix */
-.code-editor-container { flex: 1; display: flex; background-color: #12151c; overflow: hidden; position: relative; }
-.line-numbers { width: 45px; background-color: #0e1116; border-right: 1px solid var(--border-color); padding: 16px 0; text-align: right; padding-right: 12px; color: #44475a; font-size: 0.95rem; line-height: 1.5; user-select: none; overflow: hidden; }
+/* FIX: Flawless Code Editor Overlay Window Stacking Matrix */
+.code-editor-container { 
+    flex: 1; 
+    display: flex; 
+    background-color: #12151c; 
+    overflow: hidden; 
+    position: relative; 
+}
 
-.editor-textarea-wrapper { flex: 1; position: relative; overflow: hidden; }
-#code-textarea, #editor-highlight-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; margin: 0; padding: 16px; border: 0; font-size: 0.95rem; line-height: 1.5; font-family: inherit; white-space: pre; overflow-x: auto; overflow-y: auto; background: transparent; tab-size: 4; }
+.line-numbers { 
+    width: 50px; 
+    background-color: #0e1116; 
+    border-right: 1px solid var(--border-color); 
+    padding: 16px 0; 
+    text-align: right; 
+    padding-right: 12px; 
+    color: #44475a; 
+    font-size: 14px; 
+    line-height: 20px; /* Explicit pixel line height matching */
+    user-select: none; 
+    overflow: hidden; 
+}
 
-#code-textarea { color: transparent; caret-color: #ffffff; resize: none; outline: none; z-index: 2; }
-#editor-highlight-layer { color: #f8f8f2; z-index: 1; pointer-events: none; white-space: pre-wrap; word-wrap: break-word; white-space: pre; overflow: hidden; }
+.editor-textarea-wrapper { 
+    flex: 1; 
+    position: relative; 
+    overflow: hidden; 
+}
 
-/* Highlighter Token Map Classes */
+/* Base style shared across BOTH layers to guarantee pixel-perfect overlays */
+#code-textarea, #editor-highlight-layer { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    margin: 0; 
+    padding: 16px; 
+    border: 0; 
+    font-size: 14px; 
+    line-height: 20px; 
+    font-family: 'Fira Code', Consolas, Monaco, 'Courier New', monospace;
+    white-space: pre; /* Keeps code text structure intact without random wrapping drops */
+    overflow: auto; 
+    tab-size: 4;
+    -moz-tab-size: 4;
+    box-sizing: border-box;
+}
+
+/* Top functional interactivity layer */
+#code-textarea { 
+    color: transparent; /* Hides native browser text render elements */
+    background: transparent; 
+    caret-color: #ffffff; /* Keeps user input indicator cursor visible */
+    resize: none; 
+    outline: none; 
+    z-index: 2; 
+}
+
+/* Background visual representation coloring display layer */
+#editor-highlight-layer { 
+    color: #f8f8f2; 
+    z-index: 1; 
+    pointer-events: none; 
+    overflow: hidden; /* Controlled explicitly via textarea scroll listeners */
+}
+
+/* Color Tokens */
 .tk-keyword { color: var(--token-keyword); font-weight: bold; }
 .tk-builtin { color: var(--token-builtin); }
 .tk-string { color: var(--token-string); }
 .tk-number { color: var(--token-number); }
 .tk-comment { color: var(--token-comment); font-style: italic; }
 .tk-this { color: var(--token-this); font-weight: bold; }
+.tk-member { color: var(--token-member); }
 
-/* Viewport Layout */
+/* Bottom Terminal Panels */
 .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; padding: 20px; }
-#game-viewport { background-color: #000; border: 4px solid var(--border-color); border-radius: 4px; box-shadow: 0 12px 36px rgba(0,0,0,0.6); image-rendering: pixelated; }
-
-/* Output Monitor Console Layout Grid */
+#game-viewport { background-color: #000; border: 4px solid var(--border-color); border-radius: 4px; image-rendering: pixelated; }
 .console-footer { height: 180px; background-color: var(--bg-dark); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; }
-.console-header { background-color: var(--bg-medium); padding: 8px 15px; font-size: 0.75rem; font-weight: bold; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
-.console-log { padding: 12px 15px; font-size: 0.85rem; overflow-y: auto; flex: 1; line-height: 1.5; background-color: #0e1115; }
+.console-header { background-color: var(--bg-medium); padding: 8px 15px; font-size: 0.75rem; font-weight: bold; color: var(--text-main); text-transform: uppercase; }
+.console-log { padding: 12px 15px; font-size: 0.85rem; overflow-y: auto; flex: 1; background-color: #0e1115; }
 .log-line { margin-bottom: 4px; display: flex; }
-.log-line .time { color: var(--text-muted); margin-right: 10px; font-size: 0.8rem; user-select: none; }
+.log-line .time { color: var(--text-muted); margin-right: 10px; font-size: 0.8rem; }
 .log-line.system { color: #50fa7b; }
 .log-line.error { color: #ff5555; background-color: rgba(255, 85, 85, 0.08); padding: 2px 6px; border-radius: 2px; border-left: 3px solid #ff5555; }
-
-.placeholder-box { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.9rem; }
+.placeholder-box { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
