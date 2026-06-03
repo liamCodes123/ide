@@ -2,10 +2,6 @@ class ForgeInstance {
     constructor(klass) {
         this.klass = klass;
         this.fields = {};
-        // Initialize default fields from class properties
-        for (const prop of klass.properties) {
-            this.fields[prop.name] = null; 
-        }
     }
 }
 
@@ -13,38 +9,25 @@ export class Interpreter {
     constructor(consoleCallback, drawCallback) {
         this.log = consoleCallback;
         this.draw = drawCallback;
-        this.globals = {};
-        this.classes = {};
-        this.functions = {};
+        this.globals = {}; this.classes = {}; this.functions = {};
     }
 
     loadAST(ast) {
-        this.globals = {};
-        this.classes = {};
-        this.functions = ast.functions;
-
-        // Process Classes
-        for (const cls of ast.classes) {
-            this.classes[cls.name] = cls;
-        }
-        // Process Global initial evaluations
-        for (const glob of ast.globals) {
-            this.globals[glob.name] = this.evaluate(glob.value);
-        }
+        this.globals = {}; this.classes = {}; this.functions = ast.functions;
+        for (const cls of ast.classes) this.classes[cls.name] = cls;
+        for (const glob of ast.globals) this.globals[glob.name] = this.evaluate(glob.value);
     }
 
-    executeFunction(name, instanceContext = null) {
+    executeFunction(name, ctx = null) {
         const body = this.functions[name];
         if (!body) return;
-        this.executeBlock(body, instanceContext);
+        this.executeBlock(body, ctx);
     }
 
     executeBlock(statements, ctx) {
         for (const stmt of statements) {
             if (stmt.type === 'IF_STMT') {
-                if (this.evaluate(stmt.condition, ctx)) {
-                    this.executeBlock(stmt.thenBranch, ctx);
-                }
+                if (this.evaluate(stmt.condition, ctx)) this.executeBlock(stmt.thenBranch, ctx);
             } else if (stmt.type === 'EXPR_STMT') {
                 this.evaluate(stmt.expr, ctx);
             }
@@ -53,103 +36,89 @@ export class Interpreter {
 
     evaluate(exprNode, ctx = null) {
         const tokens = exprNode.tokenArray;
-        if (tokens.length === 0) return null;
+        if (!tokens || tokens.length === 0) return null;
 
-        // OOP Instance Creation: 'new ClassName()'
+        // Instance allocators resolution loop routines mappings
         if (tokens[0].type === 'NEW') {
             const className = tokens[1].value;
             const klass = this.classes[className];
-            if (!klass) throw new Error(`Class ${className} is not defined.`);
-            const instance = new ForgeInstance(klass);
-            
-            // Populate initial properties
-            for (const prop of klass.properties) {
-                instance.fields[prop.name] = this.evaluate(prop.value, instance);
-            }
-            return instance;
+            if (!klass) throw new Error(`[Runtime Error] Class '${className}' cannot be found or instantiated inside active structures workspace memory definitions logs.`);
+            const inst = new ForgeInstance(klass);
+            for (const prop of klass.properties) inst.fields[prop.name] = this.evaluate(prop.value, inst);
+            return inst;
         }
 
-        // Native API / Free Function Call Evaluators: 'print(...)' or 'rect(...)'
-        if (tokens[0].type === 'IDENTIFIER' && tokens[1]?.type === '(') {
-            return this.evaluateBuiltIn(tokens, ctx);
-        }
-
-        // Object Method Call Or Property Mutation Evaluator: 'player.move()' or 'player.x = 10'
+        // Processing custom member property assignments mutations or invocation calls
         if (tokens[0].type === 'IDENTIFIER' && tokens[1]?.type === '.') {
-            return this.handleObjectDotNotation(tokens, ctx);
+            return this.evaluateDotNotation(tokens, ctx);
         }
 
-        // Simple Math Expression / Variable Resolver Pipeline
-        let exprStr = '';
+        // Global native runtime routing execution procedures mappings
+        if (tokens[0].type === 'IDENTIFIER' && tokens[1]?.type === '(') {
+            return this.evaluateBuiltInCall(tokens, ctx);
+        }
+
+        // Fallback generic mathematical evaluation layer parser matrix mapping tracking entries bounds logs loop definitions routines 
+        let expressionString = '';
         for (const t of tokens) {
             if (t.type === 'IDENTIFIER') {
-                if (ctx && ctx.fields[t.value] !== undefined) {
-                    exprStr += ` ctx.fields['${t.value}'] `;
-                } else if (this.globals[t.value] !== undefined) {
-                    exprStr += ` this.globals['${t.value}'] `;
-                } else {
-                    exprStr += t.value;
-                }
+                if (ctx && ctx.fields[t.value] !== undefined) expressionString += ` ctx.fields['${t.value}'] `;
+                else if (this.globals[t.value] !== undefined) expressionString += ` this.globals['${t.value}'] `;
+                else throw new Error(`[Runtime Error] Identifier variable mapping point reference resolution check mismatch log failures: "${t.value}" values context arrays are entirely undefined.`);
             } else {
-                exprStr += ` ${t.value} `;
+                expressionString += ` ${t.value} `;
             }
         }
 
         try {
-            return Function('ctx', 'this', `"use strict"; return (${exprStr});`)(ctx, this);
-        } catch {
-            return null;
+            return Function('ctx', 'this', `"use strict"; return (${expressionString});`)(ctx, this);
+        } catch (ex) {
+            throw new Error(`[Runtime Math Computation Parsing Errors Evaluation Failures]: Check logic alignment configurations loops parameters. Trace: ${ex.message}`);
         }
     }
 
-    handleObjectDotNotation(tokens, currentCtx) {
-        const objName = tokens[0].value;
-        const propOrMethod = tokens[2].value;
-        
-        let targetInstance = (currentCtx && currentCtx.fields[objName]) ? currentCtx.fields[objName] : this.globals[objName];
-        if (!targetInstance || !(targetInstance instanceof ForgeInstance)) {
-            throw new Error(`Target object reference '${objName}' is not a valid class instance object.`);
+    evaluateDotNotation(tokens, ctx) {
+        const obj = tokens[0].value;
+        const target = tokens[2].value;
+        let instance = (ctx && ctx.fields[obj]) ? ctx.fields[obj] : this.globals[obj];
+
+        if (!instance || !(instance instanceof ForgeInstance)) {
+            // Self context variable matching resolution checks logic layers validation mappings tracks 
+            if (obj === 'this' && ctx instanceof ForgeInstance) instance = ctx;
+            else throw new Error(`[Runtime Error] Target execution base instance container references '${obj}' does not validate or reference active initialized classes properties arrays contexts records mapping structures.`);
         }
 
-        // Method execution invocation check: 'player.update()'
+        // Function parameters allocations method context verification routines execution: 'obj.method()'
         if (tokens[3]?.type === '(') {
-            const methodBody = targetInstance.klass.methods[propOrMethod];
-            if (!methodBody) throw new Error(`Method ${propOrMethod} not found on class ${targetInstance.klass.name}`);
-            this.executeBlock(methodBody, targetInstance);
+            const body = instance.klass.methods[target];
+            if (!body) throw new Error(`[Runtime Call Failures]: Function target methods '${target}' does not reside or exist inside parent object definitions layers blueprint records configurations logs.`);
+            this.executeBlock(body, instance);
             return null;
         }
 
-        // Assignment execution mutation: 'player.x = 20'
+        // Field value override assignments checking processing operations traces: 'obj.field = value'
         if (tokens[3]?.type === '=') {
-            const sliceValueTokens = tokens.slice(4);
-            targetInstance.fields[propOrMethod] = this.evaluate({ type: 'RAW_EXPR', tokenArray: sliceValueTokens }, currentCtx);
+            const vals = tokens.slice(4);
+            instance.fields[target] = this.evaluate({ type: 'RAW_EXPR', tokenArray: vals }, ctx);
             return null;
         }
 
-        // Property access fetch
-        return targetInstance.fields[propOrMethod];
+        return instance.fields[target];
     }
 
-    evaluateBuiltIn(tokens, ctx) {
-        const cmd = tokens[0].value;
-        // Simple token collection between parenthesis strings extraction maps
-        const argsTokens = tokens.slice(2, tokens.length - 1);
-        const args = argsTokens.filter(t => t.type !== ',').map(t => this.evaluate({ type: 'RAW_EXPR', tokenArray: [t] }, ctx));
+    evaluateBuiltInCall(tokens, ctx) {
+        const apiCmd = tokens[0].value;
+        const argumentsTokens = tokens.slice(2, tokens.length - 1);
+        const parametersMappedResultListArrayValues = argumentsTokens.filter(t => t.type !== ',').map(t => this.evaluate({ type: 'RAW_EXPR', tokenArray: [t] }, ctx));
 
-        switch (cmd) {
-            case 'print': this.log(`[Script]: ${args[0]}`); return null;
-            case 'clear': this.draw('clear', args); return null;
-            case 'rect': this.draw('rect', args); return null;
-            case 'line': this.draw('line', args); return null;
+        switch (apiCmd) {
+            case 'print': this.log(`[Game Print Logging API]: ${parametersMappedResultListArrayValues[0]}`); return null;
+            case 'clear': case 'rect': case 'line': this.draw(apiCmd, parametersMappedResultListArrayValues); return null;
             case 'collides':
-                // Custom Builtin Physics Engine: AABB Bounding Box Check API
-                // Usage: collides(x1, y1, w1, h1, x2, y2, w2, h2)
-                return (args[0] < args[4] + args[6] &&
-                        args[0] + args[2] > args[4] &&
-                        args[1] < args[5] + args[7] &&
-                        args[1] + args[3] > args[5]);
+                const [x1, y1, w1, h1, x2, y2, w2, h2] = parametersMappedResultListArrayValues;
+                return (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2);
             default:
-                throw new Error(`Unknown Engine function call command lookup hook identifier: ${cmd}`);
+                throw new Error(`[Runtime Fault Exceptions Failures Check Errors]: Standard core API builtins references tables map lookup values errors. Nonexistent keyword invocation signature: "${apiCmd}()"`);
         }
     }
 }
