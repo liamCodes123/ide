@@ -11,20 +11,20 @@
     <header class="toolbar">
         <div class="logo">🎮 PixelForge Studio</div>
         <div class="project-controls">
-            <button id="btn-run" class="btn success">▶ Run Game</button>
-            <button id="btn-stop" class="btn danger">🛑 Stop</button>
+            <button id="btn-run" class="btn success">Run Game</button>
+            <button id="btn-stop" class="btn danger">Stop</button>
         </div>
         <div class="view-switcher">
-            <button class="tab-btn active" data-target="code-workspace">💻 Code & Viewport</button>
-            <button class="tab-btn" data-target="sprite-workspace">🎨 Sprite Editor</button>
-            <button class="tab-btn" data-target="music-workspace">🎵 Music Maker</button>
+            <button class="tab-btn active" data-target="code-workspace">Code & Viewport</button>
+            <button class="tab-btn" data-target="sprite-workspace">Sprite Editor</button>
+            <button class="tab-btn" data-target="music-workspace">Music Maker</button>
         </div>
     </header>
 
     <div class="main-container">
         <aside class="sidebar">
             <div class="sidebar-section">
-                <h3>📜 Scripts</h3>
+                <h3>Scripts</h3>
                 <ul class="asset-list">
                     <li class="active">main.pf</li>
                 </ul>
@@ -32,33 +32,62 @@
         </aside>
 
         <main class="workspace">
-            
             <section id="code-workspace" class="workspace-view active">
                 <div class="split-panel">
                     <div class="editor-pane">
                         <div class="editor-header">Editing: <span>main.pf</span></div>
-                        <textarea id="code-textarea" spellcheck="false">// ForgeScript Test Code
-let playerX = 10
-let playerY = 80
+                        
+                        <div class="code-editor-container">
+                            <div class="line-numbers" id="editor-line-numbers">1</div>
+                            <div class="editor-textarea-wrapper">
+                                <pre id="editor-highlight-layer" aria-hidden="true"></pre>
+                                <textarea id="code-textarea" spellcheck="false" autocomplete="off">// Define an Object Oriented Player blueprint
+class Player {
+    let x = 20
+    let y = 50
+    let size = 16
+    let speed = 2
+
+    fn update() {
+        this.x = this.x + this.speed
+        if this.x > 256 {
+            this.x = 0
+        }
+    }
+
+    fn draw() {
+        rect(this.x, this.y, this.size, this.size, "#5c7cfa")
+    }
+}
+
+// Global scope initialization
+let user = new Player()
+let enemyX = 140
+let enemyY = 50
 
 fn init() {
-    print("Welcome to PixelForge Engine!")
+    print("OOP Engine Runtime Active!")
 }
 
 fn update() {
     clear("#111418")
-    
-    // Draw background grid marker
-    rect(40, 40, 160, 100, "#1a1d24")
-    
-    // Draw player and move them dynamically across frames
-    rect(playerX, playerY, 16, 16, "#ff004d")
-    
-    playerX = playerX + 1
-    if playerX > 256 {
-        playerX = 0
+
+    // Draw obstacle target
+    rect(enemyX, enemyY, 20, 20, "#e03131")
+
+    // Run object methods
+    user.update()
+    user.draw()
+
+    // Test spatial engine collision checks
+    if collides(user.x, user.y, user.size, user.size, enemyX, enemyY, 20, 20) {
+        print("ALERT: Collision Detected!")
+        line(user.x, user.y, enemyX, enemyY, "#ffffff")
     }
 }</textarea>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="viewport-pane">
@@ -70,15 +99,8 @@ fn update() {
                 </div>
             </section>
 
-            <section id="sprite-workspace" class="workspace-view">
-                <div class="editor-header">Sprite Editor Panel</div>
-                <div class="placeholder-box">[ Sprite Editor coming soon ]</div>
-            </section>
-            <section id="music-workspace" class="workspace-view">
-                <div class="editor-header">Music Tracker Panel</div>
-                <div class="placeholder-box">[ Music Sequencer coming soon ]</div>
-            </section>
-
+            <section id="sprite-workspace" class="workspace-view"><div class="placeholder-box">[ Sprite Editor Coming Soon ]</div></section>
+            <section id="music-workspace" class="workspace-view"><div class="placeholder-box">[ Music Sequencer Coming Soon ]</div></section>
         </main>
     </div>
 
